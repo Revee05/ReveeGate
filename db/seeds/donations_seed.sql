@@ -1,0 +1,22 @@
+-- Seed donations (20 rows)
+INSERT INTO donations (donor_name, donor_email, message, amount, status, paid_at, created_at, updated_at) VALUES
+('Rifky','rifky@example.com','Semoga bermanfaat',25000,'failed',NULL,'2026-01-01 09:21:32+07','2026-01-01 09:21:32+07'),
+('Ayu','ayu@example.com','Keep up the good work',50000,'paid','2026-01-01 10:00:00+07','2026-01-01 10:00:00+07','2026-01-01 10:00:00+07'),
+('Budi','budi@example.com','For the stream',15000,'pending',NULL,'2025-12-31 20:12:00+07','2025-12-31 20:12:00+07'),
+('Citra','citra@example.com','Nice content',20000,'paid','2026-01-01 08:30:00+07','2026-01-01 08:30:00+07','2026-01-01 08:30:00+07'),
+('Dedi','dedi@example.com','Support',100000,'paid','2026-01-01 07:45:00+07','2026-01-01 07:45:00+07','2026-01-01 07:45:00+07'),
+('Eka','eka@example.com','Donation',5000,'pending',NULL,'2025-12-30 12:00:00+07','2025-12-30 12:00:00+07'),
+('Fajar','fajar@example.com','Mantap',75000,'paid','2026-01-01 06:15:00+07','2026-01-01 06:15:00+07','2026-01-01 06:15:00+07'),
+('Gina','gina@example.com','Good luck',30000,'failed',NULL,'2025-12-29 18:20:00+07','2025-12-29 18:20:00+07'),
+('Hadi','hadi@example.com','Keep it up',45000,'paid','2026-01-01 05:05:00+07','2026-01-01 05:05:00+07','2026-01-01 05:05:00+07'),
+('Indra','indra@example.com','For the cause',60000,'pending',NULL,'2025-12-28 14:30:00+07','2025-12-28 14:30:00+07'),
+('Joko','joko@example.com','Donation dari saya',25000,'paid','2025-12-27 11:11:00+07','2025-12-27 11:11:00+07','2025-12-27 11:11:00+07'),
+('Kiki','kiki@example.com','Salam',12000,'failed',NULL,'2025-12-26 09:09:00+07','2025-12-26 09:09:00+07'),
+('Lina','lina@example.com','Semoga lancar',80000,'paid','2026-01-01 04:00:00+07','2026-01-01 04:00:00+07','2026-01-01 04:00:00+07'),
+('Maman','maman@example.com','Keep streaming',22000,'pending',NULL,'2025-12-25 16:45:00+07','2025-12-25 16:45:00+07'),
+('Nina','nina@example.com','Donation kecil',5000,'paid','2025-12-24 13:30:00+07','2025-12-24 13:30:00+07','2025-12-24 13:30:00+07'),
+('Omar','omar@example.com','Support channel',40000,'failed',NULL,'2025-12-23 10:20:00+07','2025-12-23 10:20:00+07'),
+('Putu','putu@example.com','Good job',65000,'paid','2025-12-22 08:00:00+07','2025-12-22 08:00:00+07','2025-12-22 08:00:00+07'),
+('Qiana','qiana@example.com','Donation',27000,'pending',NULL,'2025-12-21 19:30:00+07','2025-12-21 19:30:00+07'),
+('Rama','rama@example.com','Terus berkarya',35000,'paid','2025-12-20 15:15:00+07','2025-12-20 15:15:00+07','2025-12-20 15:15:00+07'),
+('Sari','sari@example.com','Semoga sukses',90000,'pending',NULL,'2025-12-19 07:45:00+07','2025-12-19 07:45:00+07');

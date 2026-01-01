@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donasi - ReveeGate</title>
+    <meta name="description" content="Kirim donasi untuk mendukung streamer favorit Anda">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 24px 16px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #e94560, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            color: #b8b8b8;
+            font-size: 14px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #e0e0e0;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: #808080;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #e94560;
+            box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.2);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .amount-presets {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .amount-preset {
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .amount-preset:hover {
+            background: rgba(233, 69, 96, 0.2);
+            border-color: #e94560;
+        }
+
+        .amount-preset.active {
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            border-color: transparent;
+        }
+
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .payment-method {
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .payment-method:hover {
+            border-color: #e94560;
+        }
+
+        .payment-method.active {
+            border-color: #e94560;
+            background: rgba(233, 69, 96, 0.15);
+        }
+
+        .payment-method img {
+            height: 32px;
+            margin-bottom: 8px;
+        }
+
+        .payment-method span {
+            display: block;
+            font-size: 13px;
+            color: #b8b8b8;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            border: none;
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 8px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(233, 69, 96, 0.4);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .summary {
+            background: rgba(233, 69, 96, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 20px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .summary-row:last-child {
+            border-bottom: none;
+            font-weight: 600;
+            font-size: 18px;
+            color: #e94560;
+        }
+
+        .error-message {
+            background: rgba(255, 76, 76, 0.2);
+            border: 1px solid rgba(255, 76, 76, 0.5);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            color: #ff6b6b;
+        }
+
+        .success-message {
+            background: rgba(76, 255, 128, 0.2);
+            border: 1px solid rgba(76, 255, 128, 0.5);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            color: #4cff80;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #ffffff;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Payment Result Page */
+        .result-container {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .result-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+
+        .result-icon.success {
+            background: rgba(76, 255, 128, 0.2);
+        }
+
+        .result-icon.pending {
+            background: rgba(255, 193, 7, 0.2);
+        }
+
+        .qr-code {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            display: inline-block;
+            margin: 20px 0;
+        }
+
+        .qr-code img {
+            width: 200px;
+            height: 200px;
+        }
+
+        .va-number {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin: 20px 0;
+            font-family: monospace;
+        }
+
+        .copy-btn {
+            background: transparent;
+            border: 1px solid #e94560;
+            color: #e94560;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 12px;
+        }
+
+        .copy-btn:hover {
+            background: rgba(233, 69, 96, 0.1);
+        }
+
+        .timer {
+            font-size: 32px;
+            font-weight: 700;
+            color: #ffc107;
+            margin: 16px 0;
+        }
+
+        footer {
+            text-align: center;
+            padding: 24px;
+            color: #808080;
+            font-size: 12px;
+        }
+
+        footer a {
+            color: #e94560;
+            text-decoration: none;
+        }
+
+        @media (max-width: 480px) {
+            .amount-presets {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>💖 Kirim Donasi</h1>
+            <p>Dukung streamer favorit Anda!</p>
+        </header>
+
+        <div id="donation-form">
+            <div class="card">
+                <div class="form-group">
+                    <label for="donor-name">Nama Anda *</label>
+                    <input type="text" id="donor-name" placeholder="Masukkan nama Anda" required maxlength="50">
+                </div>
+
+                <div class="form-group">
+                    <label for="donor-email">Email (opsional)</label>
+                    <input type="email" id="donor-email" placeholder="email@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="message">Pesan</label>
+                    <textarea id="message" placeholder="Tulis pesan untuk streamer..." maxlength="500"></textarea>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="form-group">
+                    <label>Nominal Donasi *</label>
+                    <div class="amount-presets">
+                        <button type="button" class="amount-preset" data-amount="10000">Rp 10.000</button>
+                        <button type="button" class="amount-preset" data-amount="25000">Rp 25.000</button>
+                        <button type="button" class="amount-preset" data-amount="50000">Rp 50.000</button>
+                        <button type="button" class="amount-preset" data-amount="100000">Rp 100.000</button>
+                        <button type="button" class="amount-preset" data-amount="250000">Rp 250.000</button>
+                        <button type="button" class="amount-preset" data-amount="500000">Rp 500.000</button>
+                    </div>
+                    <input type="number" id="amount" placeholder="Atau masukkan nominal lain" min="5000" max="100000000">
+                </div>
+
+                <div class="form-group">
+                    <label>Metode Pembayaran *</label>
+                    <div class="payment-methods">
+                        <div class="payment-method" data-method="qris">
+                            <img src="/static/images/qris.png" alt="QRIS" onerror="this.style.display='none'">
+                            <span>QRIS</span>
+                        </div>
+                        <div class="payment-method" data-method="gopay">
+                            <img src="/static/images/gopay.png" alt="GoPay" onerror="this.style.display='none'">
+                            <span>GoPay</span>
+                        </div>
+                        <div class="payment-method" data-method="shopeepay">
+                            <img src="/static/images/shopeepay.png" alt="ShopeePay" onerror="this.style.display='none'">
+                            <span>ShopeePay</span>
+                        </div>
+                        <div class="payment-method" data-method="dana">
+                            <img src="/static/images/dana.png" alt="DANA" onerror="this.style.display='none'">
+                            <span>DANA</span>
+                        </div>
+                        <div class="payment-method" data-method="va_bca">
+                            <img src="/static/images/bca.png" alt="BCA" onerror="this.style.display='none'">
+                            <span>VA BCA</span>
+                        </div>
+                        <div class="payment-method" data-method="va_bni">
+                            <img src="/static/images/bni.png" alt="BNI" onerror="this.style.display='none'">
+                            <span>VA BNI</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="error-container"></div>
+
+            <div class="summary" id="summary" style="display: none;">
+                <div class="summary-row">
+                    <span>Nominal</span>
+                    <span id="summary-amount">Rp 0</span>
+                </div>
+                <div class="summary-row">
+                    <span>Biaya Admin</span>
+                    <span>Rp 0</span>
+                </div>
+                <div class="summary-row">
+                    <span>Total</span>
+                    <span id="summary-total">Rp 0</span>
+                </div>
+            </div>
+
+            <button type="button" id="btn-donate" class="btn-submit" disabled>
+                Lanjutkan Pembayaran
+            </button>
+        </div>
+
+        <div id="payment-result" style="display: none;">
+            <!-- Payment result will be rendered here -->
+        </div>
+    </div>
+
+    <footer>
+        <p>Powered by <a href="https://reveegate.com">ReveeGate</a></p>
+        <p>Aman & Terpercaya 🔒</p>
+    </footer>
+
+    <script>
+        // State
+        let selectedAmount = 0;
+        let selectedMethod = '';
+        let donationId = null;
+
+        // DOM Elements
+        const donorNameInput = document.getElementById('donor-name');
+        const donorEmailInput = document.getElementById('donor-email');
+        const messageInput = document.getElementById('message');
+        const amountInput = document.getElementById('amount');
+        const btnDonate = document.getElementById('btn-donate');
+        const summary = document.getElementById('summary');
+        const summaryAmount = document.getElementById('summary-amount');
+        const summaryTotal = document.getElementById('summary-total');
+        const errorContainer = document.getElementById('error-container');
+        const donationForm = document.getElementById('donation-form');
+        const paymentResult = document.getElementById('payment-result');
+
+        // Amount presets
+        document.querySelectorAll('.amount-preset').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.amount-preset').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedAmount = parseInt(btn.dataset.amount);
+                amountInput.value = '';
+                updateSummary();
+            });
+        });
+
+        // Custom amount input
+        amountInput.addEventListener('input', () => {
+            document.querySelectorAll('.amount-preset').forEach(b => b.classList.remove('active'));
+            selectedAmount = parseInt(amountInput.value) || 0;
+            updateSummary();
+        });
+
+        // Payment methods
+        document.querySelectorAll('.payment-method').forEach(method => {
+            method.addEventListener('click', () => {
+                document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('active'));
+                method.classList.add('active');
+                selectedMethod = method.dataset.method;
+                updateButton();
+            });
+        });
+
+        // Update summary
+        function updateSummary() {
+            if (selectedAmount >= 5000) {
+                summary.style.display = 'block';
+                summaryAmount.textContent = formatCurrency(selectedAmount);
+                summaryTotal.textContent = formatCurrency(selectedAmount);
+            } else {
+                summary.style.display = 'none';
+            }
+            updateButton();
+        }
+
+        // Update button state
+        function updateButton() {
+            const donorName = donorNameInput.value.trim();
+            const isValid = donorName.length >= 2 && selectedAmount >= 5000 && selectedMethod;
+            btnDonate.disabled = !isValid;
+        }
+
+        // Input listeners
+        donorNameInput.addEventListener('input', updateButton);
+
+        // Format currency
+        function formatCurrency(amount) {
+            return 'Rp ' + amount.toLocaleString('id-ID');
+        }
+
+        // Show error
+        function showError(message) {
+            errorContainer.innerHTML = `<div class="error-message">${message}</div>`;
+        }
+
+        // Clear error
+        function clearError() {
+            errorContainer.innerHTML = '';
+        }
+
+        // Submit donation
+        btnDonate.addEventListener('click', async () => {
+            clearError();
+            
+            const donorName = donorNameInput.value.trim();
+            const donorEmail = donorEmailInput.value.trim();
+            const message = messageInput.value.trim();
+
+            if (!donorName || donorName.length < 2) {
+                showError('Nama harus minimal 2 karakter');
+                return;
+            }
+
+            if (selectedAmount < 5000) {
+                showError('Minimal donasi Rp 5.000');
+                return;
+            }
+
+            if (!selectedMethod) {
+                showError('Pilih metode pembayaran');
+                return;
+            }
+
+            // Show loading
+            btnDonate.disabled = true;
+            btnDonate.innerHTML = '<span class="loading"></span> Memproses...';
+
+            try {
+                const response = await fetch('/api/v1/donations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        donor_name: donorName,
+                        donor_email: donorEmail || undefined,
+                        message: message || undefined,
+                        amount: selectedAmount,
+                        payment_method: selectedMethod,
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Terjadi kesalahan');
+                }
+
+                // Show payment result
+                donationId = data.id;
+                showPaymentResult(data);
+
+            } catch (error) {
+                showError(error.message);
+                btnDonate.disabled = false;
+                btnDonate.textContent = 'Lanjutkan Pembayaran';
+            }
+        });
+
+        // Show payment result
+        function showPaymentResult(data) {
+            donationForm.style.display = 'none';
+            paymentResult.style.display = 'block';
+
+            const paymentInfo = data.payment_info;
+            let html = '';
+
+            if (paymentInfo.qr_code_url) {
+                // QRIS / E-Wallet with QR
+                html = `
+                    <div class="result-container">
+                        <div class="result-icon pending">⏳</div>
+                        <h2>Scan QR Code</h2>
+                        <p>Scan dengan aplikasi ${getPaymentMethodName(selectedMethod)}</p>
+                        <div class="qr-code">
+                            <img src="${paymentInfo.qr_code_url}" alt="QR Code">
+                        </div>
+                        <p>Total: <strong>${formatCurrency(data.amount)}</strong></p>
+                        <div class="timer" id="countdown">--:--</div>
+                        <p style="color: #b8b8b8; font-size: 13px;">Selesaikan pembayaran sebelum waktu habis</p>
+                    </div>
+                `;
+            } else if (paymentInfo.va_number) {
+                // Virtual Account
+                html = `
+                    <div class="result-container">
+                        <div class="result-icon pending">🏦</div>
+                        <h2>Transfer ke Virtual Account</h2>
+                        <p>${getPaymentMethodName(selectedMethod)}</p>
+                        <div class="va-number">
+                            ${paymentInfo.va_number}
+                            <button class="copy-btn" onclick="copyVA('${paymentInfo.va_number}')">Copy</button>
+                        </div>
+                        <p>Total: <strong>${formatCurrency(data.amount)}</strong></p>
+                        <div class="timer" id="countdown">--:--</div>
+                        <p style="color: #b8b8b8; font-size: 13px;">Selesaikan pembayaran sebelum waktu habis</p>
+                    </div>
+                `;
+            } else if (paymentInfo.deep_link) {
+                // E-Wallet deep link
+                html = `
+                    <div class="result-container">
+                        <div class="result-icon pending">📱</div>
+                        <h2>Buka Aplikasi ${getPaymentMethodName(selectedMethod)}</h2>
+                        <p>Klik tombol di bawah untuk membuka aplikasi</p>
+                        <a href="${paymentInfo.deep_link}" class="btn-submit" style="display: inline-block; margin: 20px 0; text-decoration: none;">
+                            Buka ${getPaymentMethodName(selectedMethod)}
+                        </a>
+                        <p>Total: <strong>${formatCurrency(data.amount)}</strong></p>
+                        <div class="timer" id="countdown">--:--</div>
+                    </div>
+                `;
+            }
+
+            paymentResult.innerHTML = html;
+
+            // Start countdown
+            if (paymentInfo.expires_at) {
+                startCountdown(new Date(paymentInfo.expires_at));
+            }
+
+            // Start polling for status
+            startStatusPolling(data.id);
+        }
+
+        // Get payment method display name
+        function getPaymentMethodName(method) {
+            const names = {
+                'qris': 'QRIS',
+                'gopay': 'GoPay',
+                'shopeepay': 'ShopeePay',
+                'dana': 'DANA',
+                'ovo': 'OVO',
+                'va_bca': 'BCA',
+                'va_bni': 'BNI',
+                'va_bri': 'BRI',
+                'va_mandiri': 'Mandiri',
+                'va_permata': 'Permata',
+            };
+            return names[method] || method;
+        }
+
+        // Copy VA number
+        function copyVA(va) {
+            navigator.clipboard.writeText(va).then(() => {
+                alert('Nomor VA berhasil disalin!');
+            });
+        }
+
+        // Start countdown timer
+        function startCountdown(expiresAt) {
+            const countdownEl = document.getElementById('countdown');
+            if (!countdownEl) return;
+
+            const interval = setInterval(() => {
+                const now = new Date();
+                const diff = expiresAt - now;
+
+                if (diff <= 0) {
+                    clearInterval(interval);
+                    countdownEl.textContent = 'Waktu habis';
+                    countdownEl.style.color = '#ff6b6b';
+                    return;
+                }
+
+                const minutes = Math.floor(diff / 60000);
+                const seconds = Math.floor((diff % 60000) / 1000);
+                countdownEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        // Poll for payment status
+        function startStatusPolling(id) {
+            const interval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/v1/donations/${id}/status`);
+                    const data = await response.json();
+
+                    if (data.status === 'completed') {
+                        clearInterval(interval);
+                        showSuccess();
+                    } else if (data.status === 'expired' || data.status === 'failed') {
+                        clearInterval(interval);
+                        showFailed(data.status);
+                    }
+                } catch (error) {
+                    console.error('Status check failed:', error);
+                }
+            }, 3000); // Poll every 3 seconds
+
+            // Stop polling after 25 minutes
+            setTimeout(() => clearInterval(interval), 25 * 60 * 1000);
+        }
+
+        // Show success
+        function showSuccess() {
+            paymentResult.innerHTML = `
+                <div class="result-container">
+                    <div class="result-icon success">✓</div>
+                    <h2>Pembayaran Berhasil!</h2>
+                    <p>Terima kasih atas donasi Anda 💖</p>
+                    <p style="margin-top: 16px; color: #b8b8b8;">Donasi Anda akan segera ditampilkan</p>
+                    <button class="btn-submit" onclick="location.reload()" style="margin-top: 24px;">
+                        Donasi Lagi
+                    </button>
+                </div>
+            `;
+        }
+
+        // Show failed
+        function showFailed(status) {
+            const message = status === 'expired' ? 'Waktu pembayaran telah habis' : 'Pembayaran gagal';
+            paymentResult.innerHTML = `
+                <div class="result-container">
+                    <div class="result-icon" style="background: rgba(255, 76, 76, 0.2);">✗</div>
+                    <h2>${message}</h2>
+                    <p>Silakan coba lagi</p>
+                    <button class="btn-submit" onclick="location.reload()" style="margin-top: 24px;">
+                        Coba Lagi
+                    </button>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

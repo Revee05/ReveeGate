@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReveeGate Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        /* Login Card */
+        .login-card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .login-card h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .login-card p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .dashboard {
+            display: none;
+        }
+
+        .dashboard-header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .dashboard-header h1 {
+            color: #333;
+            font-size: 24px;
+        }
+
+        .logout-btn {
+            padding: 10px 20px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card h3 {
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .stat-card .value {
+            color: #333;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-card.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .stat-card.primary h3,
+        .stat-card.primary .value,
+        .stat-card.primary .label {
+            color: white;
+        }
+
+        .stat-card.success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .stat-card.success h3,
+        .stat-card.success .value,
+        .stat-card.success .label {
+            color: white;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .donations-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .donations-table th {
+            text-align: left;
+            padding: 12px;
+            background: #f5f5f5;
+            color: #666;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .donations-table td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            color: #333;
+        }
+
+        /* Donations container height control */
+        #donationsTableContainer {
+            max-height: 420px; /* adjust as needed */
+            min-height: 240px;
+            overflow: auto;
+            padding-right: 8px; /* prevent layout jump when scrollbar appears */
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-badge.completed {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-badge.pending {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .ws-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .ws-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+
+        .ws-indicator.connected {
+            background: #4caf50;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .reconcile-form select,
+        .reconcile-form input,
+        .reconcile-form textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: inherit;
+        }
+
+        .reconcile-form textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="loginView" class="login-card">
+            <h1>🚀 ReveeGate</h1>
+            <p>Admin Dashboard</p>
+            <div id="loginError" class="error-message"></div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username atau Email</label>
+                    <input type="text" id="username" placeholder="Masukkan username atau email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="btn" id="loginBtn">Login</button>
+            </form>
+        </div>
+
+        <div id="dashboardView" class="dashboard">
+            <div class="dashboard-header">
+                <div>
+                    <h1>Dashboard ReveeGate</h1>
+                    <div class="ws-status">
+                        <div class="ws-indicator" id="wsIndicator"></div>
+                        <span id="wsStatus">Connecting...</span>
+                    </div>
+                </div>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card primary">
+                    <h3>Hari Ini</h3>
+                    <div class="value" id="todayDonations">0</div>
+                    <div class="label">Total Donasi</div>
+                </div>
+                <div class="stat-card success">
+                    <h3>Pendapatan Hari Ini</h3>
+                    <div class="value" id="todayAmount">Rp 0</div>
+                    <div class="label">Sukses Dibayar</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Bulan Ini</h3>
+                    <div class="value" id="monthDonations">0</div>
+                    <div class="label">Total Donasi</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Pendapatan Bulan Ini</h3>
+                    <div class="value" id="monthAmount">Rp 0</div>
+                    <div class="label">Sukses Dibayar</div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <div class="card">
+                    <h2>Donasi Terbaru</h2>
+                    <div id="donationsTableContainer">
+                        <div class="loading">Memuat data...</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Manual Reconcile</h2>
+                    <p style="color: #666; margin-bottom: 15px; font-size: 14px;">
+                        Ubah status pembayaran secara manual.
+                    </p>
+                    <form class="reconcile-form" id="reconcileForm">
+                        <input type="text" id="paymentId" placeholder="Payment ID (UUID)" required>
+                        <select id="reconcileStatus" required>
+                            <option value="">Pilih Status</option>
+                            <option value="paid">Mark as Paid</option>
+                            <option value="failed">Mark as Failed</option>
+                        </select>
+                        <textarea id="reconcileReason" placeholder="Alasan (min 10 karakter)" required></textarea>
+                        <button type="submit" class="btn">Reconcile Payment</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        const WS_BASE = API_BASE.replace('http', 'ws');
+        let accessToken = localStorage.getItem('admin_token');
+        let ws = null;
+
+        if (accessToken) showDashboard();
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            const errorDiv = document.getElementById('loginError');
+            
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Logging in...';
+            errorDiv.style.display = 'none';
+            
+            try {
+                // Send username (or email if user enters email format)
+                const isEmail = username.includes('@');
+                const payload = {
+                    password,
+                    ...(isEmail ? { email: username } : { username })
+                };
+                
+                const response = await fetch(`${API_BASE}/api/v1/admin/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ message: 'Login failed' }));
+                    throw new Error(errorData.message || 'Login failed');
+                }
+                
+                const data = await response.json();
+                accessToken = data.access_token;
+                localStorage.setItem('admin_token', accessToken);
+                showDashboard();
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                errorDiv.style.display = 'block';
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Login';
+            }
+        });
+
+        function showDashboard() {
+            document.getElementById('loginView').style.display = 'none';
+            document.getElementById('dashboardView').style.display = 'block';
+            loadDashboardData();
+            loadDonations();
+            connectWebSocket();
+            setInterval(loadDashboardData, 30000);
+        }
+
+        async function loadDonations() {
+            const container = document.getElementById('donationsTableContainer');
+            container.innerHTML = '<div class="loading">Memuat data...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/admin/donations`, {
+                    headers: { 'Authorization': `Bearer ${accessToken}` }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        logout();
+                        return;
+                    }
+                    container.innerHTML = '<div class="loading">Gagal memuat data</div>';
+                    return;
+                }
+
+                const data = await response.json();
+                const items = data.items || data.donations || [];
+
+                if (!items || items.length === 0) {
+                    container.innerHTML = '<div class="loading">Belum ada donasi</div>';
+                    return;
+                }
+
+                // Build table
+                let html = '<table class="donations-table"><thead><tr><th>Waktu</th><th>Donatur</th><th>Amount</th><th>Status</th><th>Payment ID</th></tr></thead><tbody>';
+                for (const it of items) {
+                    const time = it.created_at || it.timestamp || '';
+                    const name = it.donor_name || it.name || it.from || '-';
+                    const amount = it.amount || it.total_amount || 0;
+                    const status = (it.status || '').toLowerCase();
+                    const pid = it.payment_id || it.id || it.payment_id;
+
+                    html += `<tr><td>${time}</td><td>${escapeHtml(name)}</td><td>${formatRupiah(amount)}</td><td><span class="status-badge ${status === 'paid' ? 'completed' : 'pending'}">${status}</span></td><td>${pid || '-'}</td></tr>`;
+                }
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            } catch (err) {
+                console.error('loadDonations error', err);
+                container.innerHTML = '<div class="loading">Gagal memuat data</div>';
+            }
+        }
+
+        function escapeHtml(unsafe) {
+            return String(unsafe).replace(/[&<>"]+/g, function(m) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]); });
+        }
+
+        async function loadDashboardData() {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/admin/dashboard`, {
+                    headers: { 'Authorization': `Bearer ${accessToken}` }
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 401) logout();
+                    return;
+                }
+                
+                const data = await response.json();
+                document.getElementById('todayDonations').textContent = data.today.total_donations || 0;
+                document.getElementById('todayAmount').textContent = formatRupiah(data.today.completed_amount || 0);
+                document.getElementById('monthDonations').textContent = data.month.total_donations || 0;
+                document.getElementById('monthAmount').textContent = formatRupiah(data.month.completed_amount || 0);
+            } catch (error) {
+                console.error('Dashboard error:', error);
+            }
+        }
+
+        function connectWebSocket() {
+            if (ws) ws.close();
+            ws = new WebSocket(`${WS_BASE}/ws/admin?token=${accessToken}`);
+            
+            ws.onopen = () => {
+                document.getElementById('wsIndicator').classList.add('connected');
+                document.getElementById('wsStatus').textContent = 'Connected';
+            };
+            
+            ws.onclose = () => {
+                document.getElementById('wsIndicator').classList.remove('connected');
+                document.getElementById('wsStatus').textContent = 'Disconnected';
+                setTimeout(connectWebSocket, 5000);
+            };
+            
+            ws.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                if (message.type === 'donation') {
+                    loadDashboardData();
+                    loadDonations();
+                }
+            };
+        }
+
+        document.getElementById('reconcileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const paymentId = document.getElementById('paymentId').value;
+            const status = document.getElementById('reconcileStatus').value;
+            const reason = document.getElementById('reconcileReason').value;
+            
+            if (reason.length < 10) {
+                alert('Alasan harus minimal 10 karakter');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/admin/reconcile`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`
+                    },
+                    body: JSON.stringify({ payment_id: paymentId, status, reason })
+                });
+                
+                if (!response.ok) throw new Error('Reconcile failed');
+                
+                alert('Payment berhasil di-reconcile');
+                document.getElementById('reconcileForm').reset();
+                loadDashboardData();
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+
+        function logout() {
+            localStorage.removeItem('admin_token');
+            if (ws) ws.close();
+            location.reload();
+        }
+
+        function formatRupiah(amount) {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(amount);
+        }
+    </script>
+</body>
+</html>

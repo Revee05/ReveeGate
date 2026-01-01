@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donation Overlay - ReveeGate</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: transparent;
+            overflow: hidden;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        /* Overlay container - positioned at bottom center by default */
+        #overlay-container {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+        }
+
+        /* Donation alert box */
+        .donation-alert {
+            background: linear-gradient(135deg, rgba(233, 69, 96, 0.95) 0%, rgba(255, 107, 107, 0.95) 100%);
+            border-radius: 20px;
+            padding: 24px 32px;
+            min-width: 400px;
+            max-width: 600px;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.5),
+                0 0 40px rgba(233, 69, 96, 0.3);
+            opacity: 0;
+            transform: translateY(50px) scale(0.8);
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .donation-alert.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .donation-alert.hide {
+            opacity: 0;
+            transform: translateY(-50px) scale(0.8);
+        }
+
+        /* Header with donor name */
+        .alert-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .donor-avatar {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-right: 16px;
+        }
+
+        .donor-info {
+            flex: 1;
+        }
+
+        .donor-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .donation-amount {
+            font-size: 28px;
+            font-weight: 800;
+            color: #ffeb3b;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Message */
+        .donation-message {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 18px;
+            color: #ffffff;
+            line-height: 1.5;
+            word-wrap: break-word;
+            max-height: 120px;
+            overflow: hidden;
+        }
+
+        /* Animation keyframes */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(233, 69, 96, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(233, 69, 96, 0.8); }
+        }
+
+        .donation-alert.show {
+            animation: pulse 0.5s ease-out;
+        }
+
+        /* Confetti container */
+        #confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 9998;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            opacity: 0;
+        }
+
+        /* Sound notification indicator */
+        #sound-indicator {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            display: none;
+        }
+
+        /* Debug info */
+        #debug-info {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #00ff00;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-family: monospace;
+            display: none;
+        }
+
+        #debug-info.show {
+            display: block;
+        }
+    </style>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="confetti-container"></div>
+    
+    <div id="overlay-container">
+        <!-- Donation alerts will be inserted here -->
+    </div>
+
+    <div id="sound-indicator">🔔 Sound enabled</div>
+    
+    <div id="debug-info">
+        <div>Status: <span id="ws-status">Disconnected</span></div>
+        <div>Token: <span id="ws-token">-</span></div>
+        <div>Messages: <span id="msg-count">0</span></div>
+    </div>
+
+    <!-- Notification sound -->
+    <audio id="notification-sound" preload="auto">
+        <source src="/static/sounds/donation.mp3" type="audio/mpeg">
+        <source src="/static/sounds/donation.ogg" type="audio/ogg">
+    </audio>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            displayDuration: 8000,      // How long to show each donation (ms)
+            animationDuration: 500,     // Animation duration (ms)
+            enableSound: true,          // Enable sound notification
+            enableConfetti: true,       // Enable confetti animation
+            showDebug: false,           // Show debug info
+            reconnectDelay: 3000,       // WebSocket reconnect delay (ms)
+            maxReconnectAttempts: 10,   // Max reconnect attempts
+        };
+
+        // State
+        let ws = null;
+        let reconnectAttempts = 0;
+        let messageCount = 0;
+        let donationQueue = [];
+        let isShowingDonation = false;
+
+        // DOM Elements
+        const container = document.getElementById('overlay-container');
+        const confettiContainer = document.getElementById('confetti-container');
+        const notificationSound = document.getElementById('notification-sound');
+        const debugInfo = document.getElementById('debug-info');
+        const wsStatus = document.getElementById('ws-status');
+        const wsToken = document.getElementById('ws-token');
+        const msgCount = document.getElementById('msg-count');
+
+        // Get overlay token from URL
+        function getToken() {
+            const pathParts = window.location.pathname.split('/');
+            const tokenFromPath = pathParts[pathParts.length - 1];
+            
+            if (tokenFromPath && tokenFromPath !== 'overlay') {
+                return tokenFromPath;
+            }
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('token');
+        }
+
+        // Initialize
+        function init() {
+            // Show debug if enabled
+            if (CONFIG.showDebug || window.location.search.includes('debug')) {
+                debugInfo.classList.add('show');
+            }
+
+            const token = getToken();
+            if (!token) {
+                console.error('No overlay token provided');
+                updateDebug('No token', '-');
+                return;
+            }
+
+            wsToken.textContent = token.substring(0, 8) + '...';
+            connectWebSocket(token);
+        }
+
+        // Connect to WebSocket
+        function connectWebSocket(token) {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/overlay?token=${token}`;
+
+            updateDebug('Connecting...', token.substring(0, 8) + '...');
+
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log('WebSocket connected');
+                reconnectAttempts = 0;
+                updateDebug('Connected', token.substring(0, 8) + '...');
+            };
+
+            ws.onmessage = (event) => {
+                handleMessage(event.data);
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                updateDebug('Error', token.substring(0, 8) + '...');
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket closed');
+                updateDebug('Disconnected', token.substring(0, 8) + '...');
+                
+                // Attempt to reconnect
+                if (reconnectAttempts < CONFIG.maxReconnectAttempts) {
+                    reconnectAttempts++;
+                    console.log(`Reconnecting in ${CONFIG.reconnectDelay}ms... (attempt ${reconnectAttempts})`);
+                    setTimeout(() => connectWebSocket(token), CONFIG.reconnectDelay);
+                }
+            };
+        }
+
+        // Handle incoming message
+        function handleMessage(data) {
+            try {
+                const message = JSON.parse(data);
+                messageCount++;
+                msgCount.textContent = messageCount;
+
+                console.log('Received message:', message);
+
+                switch (message.type) {
+                    case 'welcome':
+                        console.log('Connected to ReveeGate');
+                        break;
+
+                    case 'donation':
+                        queueDonation(message.data);
+                        break;
+
+                    case 'pong':
+                        // Heartbeat response
+                        break;
+
+                    case 'error':
+                        console.error('Server error:', message.data.message);
+                        break;
+                }
+            } catch (error) {
+                console.error('Failed to parse message:', error);
+            }
+        }
+
+        // Queue donation for display
+        function queueDonation(donation) {
+            donationQueue.push(donation);
+            processQueue();
+        }
+
+        // Process donation queue
+        function processQueue() {
+            if (isShowingDonation || donationQueue.length === 0) {
+                return;
+            }
+
+            const donation = donationQueue.shift();
+            showDonation(donation);
+        }
+
+        // Show donation alert
+        function showDonation(donation) {
+            isShowingDonation = true;
+
+            // Play sound
+            if (CONFIG.enableSound) {
+                playSound();
+            }
+
+            // Create donation alert element
+            const alert = document.createElement('div');
+            alert.className = 'donation-alert';
+            alert.innerHTML = `
+                <div class="alert-header">
+                    <div class="donor-avatar">💖</div>
+                    <div class="donor-info">
+                        <div class="donor-name">${escapeHtml(donation.donor_name)}</div>
+                        <div class="donation-amount">${formatCurrency(donation.amount)}</div>
+                    </div>
+                </div>
+                ${donation.message ? `<div class="donation-message">${escapeHtml(donation.message)}</div>` : ''}
+            `;
+
+            container.appendChild(alert);
+
+            // Trigger animation
+            requestAnimationFrame(() => {
+                alert.classList.add('show');
+            });
+
+            // Show confetti
+            if (CONFIG.enableConfetti) {
+                showConfetti();
+            }
+
+            // Hide after duration
+            setTimeout(() => {
+                alert.classList.remove('show');
+                alert.classList.add('hide');
+
+                setTimeout(() => {
+                    alert.remove();
+                    isShowingDonation = false;
+                    processQueue();
+                }, CONFIG.animationDuration);
+            }, CONFIG.displayDuration);
+        }
+
+        // Play notification sound
+        function playSound() {
+            notificationSound.currentTime = 0;
+            notificationSound.play().catch(error => {
+                console.log('Sound playback failed:', error);
+            });
+        }
+
+        // Show confetti animation
+        function showConfetti() {
+            const colors = ['#e94560', '#ff6b6b', '#ffeb3b', '#4caf50', '#2196f3', '#9c27b0'];
+            const confettiCount = 50;
+
+            for (let i = 0; i < confettiCount; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.width = (Math.random() * 10 + 5) + 'px';
+                confetti.style.height = (Math.random() * 10 + 5) + 'px';
+                confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                
+                confettiContainer.appendChild(confetti);
+
+                // Animate confetti
+                const duration = Math.random() * 2000 + 1000;
+                const rotation = Math.random() * 720 - 360;
+                const xDrift = Math.random() * 200 - 100;
+
+                confetti.animate([
+                    { 
+                        transform: 'translateY(-20px) translateX(0) rotate(0deg)',
+                        opacity: 1 
+                    },
+                    { 
+                        transform: `translateY(100vh) translateX(${xDrift}px) rotate(${rotation}deg)`,
+                        opacity: 0 
+                    }
+                ], {
+                    duration: duration,
+                    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                    delay: Math.random() * 500
+                }).onfinish = () => confetti.remove();
+            }
+        }
+
+        // Format currency
+        function formatCurrency(amount) {
+            return 'Rp ' + parseInt(amount).toLocaleString('id-ID');
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Update debug info
+        function updateDebug(status, token) {
+            wsStatus.textContent = status;
+            if (token) wsToken.textContent = token;
+        }
+
+        // Send ping to keep connection alive
+        function sendPing() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'ping' }));
+            }
+        }
+
+        // Start ping interval
+        setInterval(sendPing, 30000);
+
+        // Initialize on load
+        window.addEventListener('load', init);
+
+        // Test function (for development)
+        window.testDonation = function() {
+            queueDonation({
+                id: 'test-' + Date.now(),
+                donor_name: 'Test Donor',
+                message: 'This is a test donation message! Thank you for streaming! 🎮',
+                amount: 50000,
+                paid_at: new Date().toISOString()
+            });
+        };
+    </script>
+</body>
+</html>

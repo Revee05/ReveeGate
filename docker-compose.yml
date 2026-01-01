@@ -1,0 +1,171 @@
+# ReveeGate Docker Compose Configuration
+# Production-ready setup with PostgreSQL, Redis, and the application
+
+version: '3.9'
+
+services:
+  # Main Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: reveegate-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    environment:
+      - APP_NAME=${APP_NAME:-reveegate}
+      - APP_VERSION=${APP_VERSION:-1.0.0}
+      - APP_PORT=8080
+      - APP_ENVIRONMENT=${APP_ENVIRONMENT:-production}
+      - APP_BASE_URL=${APP_BASE_URL}
+      - DB_HOST=postgres
+      - DATABASE_URL=postgres://${DB_USER:-reveegate}:${DB_PASSWORD}@postgres:5432/${DB_NAME:-reveegate}?sslmode=${DB_SSLMODE:-disable}
+      - DB_PORT=5432
+      - DB_USER=${DB_USER:-reveegate}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME:-reveegate}
+      - DB_SSLMODE=disable
+      - REDIS_ADDR=redis:6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - JWT_SECRET=${JWT_SECRET}
+      - MIDTRANS_SERVER_KEY=${MIDTRANS_SERVER_KEY}
+      - MIDTRANS_CLIENT_KEY=${MIDTRANS_CLIENT_KEY}
+      - MIDTRANS_MERCHANT_ID=${MIDTRANS_MERCHANT_ID}
+      - MIDTRANS_IS_PRODUCTION=${MIDTRANS_IS_PRODUCTION:-false}
+      - XENDIT_SECRET_KEY=${XENDIT_SECRET_KEY}
+      - XENDIT_PUBLIC_KEY=${XENDIT_PUBLIC_KEY}
+      - XENDIT_WEBHOOK_TOKEN=${XENDIT_WEBHOOK_TOKEN}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - reveegate-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: reveegate-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${DB_USER:-reveegate}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME:-reveegate}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./db/migrations:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-reveegate} -d ${DB_NAME:-reveegate}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - reveegate-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: reveegate-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      ${REDIS_PASSWORD:+--requirepass ${REDIS_PASSWORD}}
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - reveegate-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Nginx Reverse Proxy (optional, for production)
+  nginx:
+    image: nginx:alpine
+    container_name: reveegate-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./deploy/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./web/static:/var/www/static:ro
+      - nginx-certs:/etc/nginx/certs:ro
+    depends_on:
+      - app
+    networks:
+      - reveegate-network
+    profiles:
+      - production
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Database Migration Tool (run once)
+  migrate:
+    image: migrate/migrate:v4.16.2
+    container_name: reveegate-migrate
+    volumes:
+      - ./db/migrations:/migrations:ro
+    command: [
+      "-path", "/migrations",
+      "-database", "postgres://${DB_USER:-reveegate}:${DB_PASSWORD}@postgres:5432/${DB_NAME:-reveegate}?sslmode=disable",
+      "up"
+    ]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - reveegate-network
+    profiles:
+      - migrate
+
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  nginx-certs:
+    driver: local
+
+networks:
+  reveegate-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16

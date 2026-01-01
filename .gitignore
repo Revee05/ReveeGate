@@ -1,0 +1,37 @@
+/.env
+.env.local
+.env.*
+/reveegate.exe
+/bin/
+/build/
+/dist/
+/vendor/
+/*.log
+*.sqlite
+*.db
+coverage.out
+*.coverprofile
+*.test
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+node_modules/
+/.terraform/
+exp/
+
+# Go build files
+*.out
+
+# IDE/editor configs
+*.iml
+
+# Ignore VS Code workspace settings
+.vscode/*
+!/.vscode/settings.json
